@@ -1,0 +1,9 @@
+{
+  "modelVersion": "6.0.0",
+  "description": "汉诺塔游戏:一个以 ArkTS / ArkUI 学习为目标的真实可玩项目。",
+  "dependencies": {
+  },
+  "devDependencies": {
+    "@ohos/hypium": "1.0.28"
+  }
+}

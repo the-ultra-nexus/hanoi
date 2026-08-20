@@ -1,0 +1,9 @@
+{
+  "name": "entry",
+  "version": "1.0.0",
+  "description": "汉诺塔游戏入口模块(规则引擎目录 + 薄 UI 层)。",
+  "main": "",
+  "author": "",
+  "license": "",
+  "dependencies": {}
+}

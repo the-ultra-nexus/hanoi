@@ -1,0 +1,41 @@
+#!/usr/bin/env bash
+#
+# hvigorw wrapper — runs the DevEco-Studio-bundled hvigor with the right
+# environment (HarmonyOS SDK + bundled JDK + ohpm), so agents and humans can
+# build/test this project without opening the IDE.
+#
+# Usage (from the repo root):
+#   ./hvigorw test                     # local unit tests (Hypium, previewer-run)
+#   ./hvigorw assembleHap --mode module -p product=default -p buildMode=debug
+#
+# Customize with env vars:
+#   DEVECO_HOME     DevEco Studio app bundle (default: /Applications/DevEco-Studio.app)
+#   DEVECO_SDK_HOME HarmonyOS/OpenHarmony SDK root (default: $DEVECO_HOME/Contents/sdk)
+#   JAVA_HOME       JDK for HAP packaging (default: DevEco-bundled jbr)
+
+set -euo pipefail
+
+DEVECO_HOME="${DEVECO_HOME:-/Applications/DevEco-Studio.app}"
+if [[ ! -d "$DEVECO_HOME" ]]; then
+  echo "error: DevEco Studio not found at $DEVECO_HOME (set DEVECO_HOME)" >&2
+  exit 1
+fi
+
+export DEVECO_SDK_HOME="${DEVECO_SDK_HOME:-$DEVECO_HOME/Contents/sdk}"
+export JAVA_HOME="${JAVA_HOME:-$DEVECO_HOME/Contents/jbr/Contents/Home}"
+
+HVIGORW="$DEVECO_HOME/Contents/tools/hvigor/bin/hvigorw"
+if [[ ! -f "$HVIGORW" ]]; then
+  echo "error: bundled hvigorw not found at $HVIGORW" >&2
+  exit 1
+fi
+
+if [[ ! -d "$DEVECO_SDK_HOME" ]]; then
+  echo "error: HarmonyOS SDK not found at $DEVECO_SDK_HOME" >&2
+  exit 1
+fi
+
+# Run without the hvigor daemon: the daemon caches the env it started with,
+# so a stale daemon would miss JAVA_HOME / DEVECO_SDK_HOME set by this script
+# and fail HAP packaging with "Unable to locate a Java Runtime".
+exec "$HVIGORW" --no-daemon "$@"

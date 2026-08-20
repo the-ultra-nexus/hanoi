@@ -1,0 +1,16 @@
+{
+  "string": [
+    {
+      "name": "module_desc",
+      "value": "汉诺塔游戏入口模块"
+    },
+    {
+      "name": "EntryAbility_desc",
+      "value": "汉诺塔游戏入口"
+    },
+    {
+      "name": "EntryAbility_label",
+      "value": "汉诺塔"
+    }
+  ]
+}
