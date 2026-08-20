@@ -248,11 +248,19 @@ pause
 # ── Stage 4: AppGallery Connect app with the matching bundleName ──────────
 stage "AGC app (bundleName must exist)"
 say "Automatic signing provisions a debug profile keyed to the app"
-say "${BUNDLE} — it must already exist on AppGallery Connect."
-step "Project → app/元服务 with the exact bundle name ${BUNDLE}."
+say "${BUNDLE} — it must exist (as a HarmonyOS app) under YOUR AGC account."
+say "Create it this way (direct '新建应用' needs an invite list; adding an"
+say "app under a project does NOT):"
+step "华为开发者联盟 → 登录 → 账号下拉 → 去认证 (if not yet 实名: 人脸识别"
+step "  认证, 即时完成 — signing services are locked without it)."
+step "开发者联盟 → 我的项目 → 新建/进入一个项目 → 项目下 添加 HarmonyOS 应用."
+step "App type = HarmonyOS 应用; bundle name = ${BUNDLE} (exact match);"
+step "  分类/名称任意."
+step "CN account → agc/index.html; else use /en/ URL:"
 open_url "https://developer.huawei.com/consumer/cn/service/jsp/agc/index.html"
-step "No real-name verification yet? You can still get a 14-day debug profile"
-step "  from a real-name-verified, APP-manager (or higher) Huawei account."
+step "No invite-list access? 在项目下添加应用即可调试, 无需受邀名单."
+step "After creating, go back to DevEco signing panel and click Try Again."
+note "Food for thought: system clock off Beijing time? Auto-signing rejects it."
 pause "Press Enter once the AGC app exists (or you're sure you already have one)."
 
 # ── Stage 5: DevEco automatic signing (human, in the IDE) ─────────────────
