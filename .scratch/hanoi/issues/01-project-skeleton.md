@@ -1,6 +1,6 @@
 # 01 — 工程骨架与空壳启动
 
-**What to build:** 一个能在模拟器上启动的空应用壳:工程结构就绪,单测脚手架(Hypium)能跑通一个空断言。首次建工程包含人工步骤(DevEco Studio 新建工程,SDK 随向导安装),建议顺路固化成可复用的向导。
+**What to build:** 一个能在真机(Apple Silicon 主机亦可用模拟器,选型见 ADR-0001)上启动的空应用壳:工程结构就绪,单测脚手架(Hypium)能跑通一个空断言。首次建工程包含人工步骤(DevEco Studio 新建工程、真机 USB 调试与自动签名),已固化为可复用向导(`scripts/setup-real-device.sh`)。
 
 **Blocked by:** None — can start immediately
 
