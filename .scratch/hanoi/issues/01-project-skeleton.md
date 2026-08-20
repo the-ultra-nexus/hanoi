@@ -4,11 +4,11 @@
 
 **Blocked by:** None — can start immediately
 
-**Status:** ready-for-agent
+**Status:** resolved
 
 - [x] Hypium 单测能运行,有一例空断言通过
 - [x] 规则引擎模块目录已建好,可被测试引用
-- [ ] 设备可启动应用,显示空主页面 (方案已改为**真机**优先:可用 `scripts/setup-real-device.sh` 完成 USB 调试 + DevEco 自动签名 + hdc 安装/启动/校验;模拟器路径 `scripts/setup-emulator.sh` 仅 Apple Silicon 可用)
+- [x] 设备可启动应用,显示空主页面 (2026-08-20 真机验收通过: hdc 安装签名后 HAP 成功 → `aa start` 成功 → 进程 pidof 存活; 用户确认手机显示空白主页)
 
 ## Comments
 
@@ -29,3 +29,15 @@
   - 用户 AGC 上已存在「汉诺塔游戏」应用,bundleName = `com.example1.hanoi`(项目 ai-gallery)。
   - 工程 bundleName 由 `com.example.hanoi` 改为 `com.example1.hanoi`(AppScope/app.json5 + 两个向导 BUNDLE 变量 + toolchain.md)。
   - 早前一次自动签名曾按旧包名签发过 profile(p7b 绑定 `com.example.hanoi`,今日到期 2027-08-20 且含设备 UDID),但 AGC 无此应用 → 视为残留;需在 DevEco 用新 bundle 重跑自动签名(File > Project Structure > Signing Configs > Sign in > Fix/Try Again)。
+
+**2026-08-20 — 真机验收通过(agent + 用户):**
+
+- DevEco 重新自动签名:新 p7b 已解码验证 `bundle-name: com.example1.hanoi`、debug、有效期至 2027-08-20、含设备 UDID。
+- 补回 product → `signingConfig: "default"` 引用(清理残留时误删,IDE 未自动补)→ `./hvigorw assembleHap` 产出 `entry-default-signed.hap`。
+- 真机安装/启动/存活验证(WiFi hdc, 设备 192.168.3.24:33103):`hdc install -r` → `install bundle successfully`;`hdc shell aa start -a EntryAbility -b com.example1.hanoi` → `start ability successfully`;`hdc shell pidof com.example1.hanoi` → `39138`。
+- 用户确认手机屏幕显示空白主页面(空 Column)。
+- 此前 IDE Run 的 9568320 "no signature file" 为未签名构建产物所致,CLI 重建后消除。
+
+## Answer
+
+工单 01 全部验收达成:空壳工程在真机上启动并显示空主页面;Hypium 单测空断言通过;规则引擎目录可被测试引用。验收路径最终为:真机优先(ADR-0001)+ bundleName 对齐 AGC 既有应用 `com.example1.hanoi` + DevEco 自动签名 + hdc CLI 安装启动校验。模拟器路径保留为 Apple Silicon 备选(`scripts/setup-emulator.sh`)。

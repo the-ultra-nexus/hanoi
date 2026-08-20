@@ -1,9 +1,24 @@
 {
   "app": {
-    "signingConfigs": [],
+    "signingConfigs": [
+      {
+        "name": "default",
+        "type": "HarmonyOS",
+        "material": {
+          "certpath": "~/.ohos/config/default_hanoi_qfxz7AYqr_puK6phEiX6wogJsuCQsuEvP4IDulD0MYE=.cer",
+          "keyAlias": "debugKey",
+          "keyPassword": "REVOKED",
+          "profile": "~/.ohos/config/default_hanoi_qfxz7AYqr_puK6phEiX6wogJsuCQsuEvP4IDulD0MYE=.p7b",
+          "signAlg": "SHA256withECDSA",
+          "storeFile": "~/.ohos/config/default_hanoi_qfxz7AYqr_puK6phEiX6wogJsuCQsuEvP4IDulD0MYE=.p12",
+          "storePassword": "REVOKED"
+        }
+      }
+    ],
     "products": [
       {
         "name": "default",
+        "signingConfig": "default",
         "compatibleSdkVersion": "6.0.0(20)",
         "targetSdkVersion": "6.1.1(24)",
         "runtimeOS": "HarmonyOS",
