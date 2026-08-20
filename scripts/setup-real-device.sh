@@ -183,140 +183,122 @@ finish() {
 # ──────────────────────────────────────────────────────────────────────────
 # STAGES — author this section. One stage() per step the human takes.
 # ──────────────────────────────────────────────────────────────────────────
-# This wizard walks a human through the manual parts of "first-time setup" for
-# the hanoi project (ticket 01): hardware check, DevEco Studio, emulator image
-# download, AVD creation, and — if needed — automatic signing for real devices.
-# Everything after the emulator is up (build, install, launch, verify) the
-# wizard runs itself.
-#
-# Requirements the human must satisfy before running:
-#   - A HarmonyOS emulator host: Apple Silicon macOS (arm64) or Windows x86_64
-#     with Hyper-V. Intel macOS is NOT supported by the 6.x emulator images.
-#     (This repo was scaffolded & verified on an Intel Mac where only the
-#     build/test part can run headlessly.)
-#   - DevEco Studio 6.x installed (bundles the HarmonyOS SDK + emulator).
+# Real-device acceptance for the hanoi project (ticket 01), following the
+# official guide "使用真机调试运行应用":
+#   https://developer.huawei.com/consumer/cn/doc/harmonyos-guides/ide-run-device
+# Flow: developer mode + USB debugging on the phone → connect & authorize
+# (MTP) → AGC app exists (bundleName match) → DevEco automatic signing →
+# wizard builds/installs/launches/verifies via hdc.
+# Works on any host (Intel Mac included) — unlike the arm64-only emulator.
 
 TOTAL_STAGES=7
 
 REPO="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 DEVECO_HOME="/Applications/DevEco-Studio.app"
-HAP="entry/build/default/outputs/default/entry-default-unsigned.hap"
+SDK="$DEVECO_HOME/Contents/sdk"
+HDC="$SDK/default/openharmony/toolchains/hdc"
 BUNDLE="com.example.hanoi"
 ABILITY="EntryAbility"
 
-# hdc_bin — the hdc CLI: from PATH, else the DevEco-bundled SDK toolchains.
-hdc_bin() {
-  command -v hdc 2>/dev/null || echo "$DEVECO_HOME/Contents/sdk/default/openharmony/toolchains/hdc"
-}
+banner "HarmonyOS real-device setup — hanoi"
 
-banner "HarmonyOS emulator setup — hanoi"
+# ── Stage 1: phone developer mode ─────────────────────────────────────────
+stage "Phone — developer mode"
+say "On the HarmonyOS phone:"
+step "设置 (Settings) → 通用 (General) → 关于手机 (About phone)"
+step "Tap 版本号 (Build number) seven times until it says 开发者模式已开启."
+step "Back in 设置 → 通用 → 开发者模式 (Developer options): turn it ON."
+pause "Press Enter once developer mode is on."
 
-# ── Stage 1: host hardware check (automatic; gates the rest) ──────────────
-stage "Host capability check"
-say "The HarmonyOS 6.x emulator ships arm64 images for macOS. Apple Silicon is"
-say "required; Intel macOS cannot boot them. Windows works on x86_64 with Hyper-V."
-if [[ "$(uname -s)" == "Darwin" ]]; then
-  case "$(uname -m)" in
-    arm64) note "✓ macOS arm64 (Apple Silicon) — emulator supported."
-           ;;
-    x86_64) warn "✗ Intel Mac detected: this machine cannot run the 6.1.1 emulator."
-            warn "  The build/test pipeline (./hvigorw test + assembleHap) works here."
-            warn "  On this machine, use a real phone instead:"
-            warn "    scripts/setup-real-device.sh"
-            warn "  Or run this wizard on an Apple Silicon Mac."
-            confirm "Continue for a real-device run instead (launch the other wizard)?" \
-              && warn "Run scripts/setup-real-device.sh from this repo." || true
-            exit 0
-           ;;
-  esac
-elif [[ "$(uname -s)" == "Linux" || "$(uname -s)" == "MINGW"* || "$(uname -s)" == "MSYS"* ]]; then
-  warn "Linux is not a HarmonyOS emulator host. Use macOS (Apple Silicon) or Windows."
-  exit 1
-fi
-pause
+# ── Stage 2: USB debugging on the phone ───────────────────────────────────
+stage "Phone — USB debugging"
+step "设置 → 通用 → 开发者模式: enable 开启 USB 调试 (USB debugging)."
+step "Also enable 允许 USB 安装 (allow USB installs) if present, so hdc can"
+step "  push the HAP without an extra prompt."
+note "If the device was previously connected with ADB, disconnect/reconnect USB."
+pause "Press Enter once USB debugging is on."
 
-# ── Stage 2: DevEco Studio present? ───────────────────────────────────────
-stage "DevEco Studio"
-if [[ -d "$DEVECO_HOME" ]]; then
-  note "✓ Found $DEVECO_HOME"
-else
-  warn "DevEco Studio not found at $DEVECO_HOME."
-  open_url "https://developer.huawei.com/consumer/cn/download/"
-  step "Download & install DevEco Studio (HarmonyOS 6.x)."
-  pause "Press Enter once it is installed."
-fi
-note "First launch: accept the HarmonyOS license agreements (Tools > SDK Manager)."
-pause
-
-# ── Stage 3: emulator image download (human, in the IDE) ──────────────────
-stage "Emulator image (Device Manager)"
-say "Open DevEco Studio, then Tools > Device Manager. This machine needs the"
-say "phone image 'HarmonyOS 6.1.1(24)' (~2-3 GB download)."
-open_url "https://developer.huawei.com/consumer/cn/doc/harmonyos-guides/ide-emulator"
-step "Device Manager → Device tab → phone → click the download icon next to"
-step "  'HarmonyOS 6.1.1(24)' and let it finish. Requires a Huawei account login."
-pause "Press Enter once the image is downloaded."
-
-# ── Stage 4: create the phone AVD (optional; also auto-created) ───────────
-stage "Create the phone device"
-step "In Device Manager, click + (New Device) or run the downloaded image."
-step "Pick 'Huawei_Phone' (defaults are fine) → Finish."
-note "If Device Manager already auto-created a phone device, skip this stage."
-pause "Press Enter once a phone device exists."
-
-# ── Stage 5: boot the emulator, wait for hdc ──────────────────────────────
-stage "Boot the emulator"
-step "Device Manager → on the phone device click ▶ (Start)."
-note "The window opens a full phone UI; first boot can take a couple of minutes."
-if [[ -x "$(hdc_bin)" ]]; then
-  HDC="$(hdc_bin)"
-  pause "Press Enter once the phone UI is visible — the wizard waits for hdc…"
+# ── Stage 3: connect & authorize, then let hdc see it ─────────────────────
+stage "Connect & authorize"
+step "Plug the phone into this computer with a USB cable."
+step "On the phone, in the USB-usage dialog choose 文件传输 (File transfer / MTP)."
+step "On this computer, allow the debug-authorization popup and tick"
+step "  'Always allow this computer' if offered (computer-side: last step of"
+step "  the hdc pairing prompt is '始终允许此计算机调试')."
+say "Waiting for hdc to see the device…"
+TARGET=""
+for _ in $(seq 1 30); do
+  TARGET="$("$HDC" list targets 2>/dev/null | grep -v '^$' || true)"
+  [[ -n "$TARGET" && ! "$TARGET" =~ ^\[Empty\] ]] && break
+  sleep 4
+done
+if [[ -z "$TARGET" || "$TARGET" =~ ^\[Empty\] ]]; then
+  warn "hdc still sees no device ($("$HDC" list targets 2>/dev/null | tr '\n' ' '))."
+  warn "Re-check: USB debugging on? USB mode = File transfer? Authorized popup accepted?"
+  confirm "Retry scanning for 2 more minutes?" || exit 1
   for _ in $(seq 1 30); do
-    if "$HDC" list targets 2>/dev/null | grep -qi "emulator\|phone"; then
-      note "✓ hdc sees a target: $("$HDC" list targets 2>/dev/null | tr '\n' ' ')"
-      break
-    fi
+    TARGET="$("$HDC" list targets 2>/dev/null | grep -v '^$' || true)"
+    [[ -n "$TARGET" && ! "$TARGET" =~ ^\[Empty\] ]] && break
     sleep 4
   done
-else
-  note "hdc not found on PATH — continue manually; install/launch steps below"
-  note "will need the hdc from the SDK toolchains folder."
 fi
+note "✓ Device: $(echo "$TARGET" | tr '\n' ' ')"
 pause
+
+# ── Stage 4: AppGallery Connect app with the matching bundleName ──────────
+stage "AGC app (bundleName must exist)"
+say "Automatic signing provisions a debug profile keyed to the app"
+say "${BUNDLE} — it must already exist on AppGallery Connect."
+step "Project → app/元服务 with the exact bundle name ${BUNDLE}."
+open_url "https://developer.huawei.com/consumer/cn/service/jsp/agc/index.html"
+step "No real-name verification yet? You can still get a 14-day debug profile"
+step "  from a real-name-verified, APP-manager (or higher) Huawei account."
+pause "Press Enter once the AGC app exists (or you're sure you already have one)."
+
+# ── Stage 5: DevEco automatic signing (human, in the IDE) ─────────────────
+stage "DevEco — automatic signing"
+say "Open this project in DevEco Studio (File > Open… → $REPO) "
+say "and let it sign for debug with your Huawei account:"
+step "File > Project Structure > Project > Signing Configs"
+step "Tick 勾选 Automatically generate signature, then 登录 (Sign in) with the"
+step "  Huawei account and 允许 (Allow) the authorization."
+step "Wait until signing completes (it fetches cert + debug profile for this"
+step "  device and writes them into build-profile.json5), then click OK."
+note "Success looks like: a signingConfig named 'default' (material paths) "
+note "appears in build-profile.json5, and the run device shows the phone."
+pause "Press Enter once signing finished and you clicked OK."
 
 # ── Stage 6: build, install, launch, verify (automatic) ───────────────────
-stage "Build & install the shell app"
-step "Building the HAP (unsigned debug):"
+stage "Build & install the signed app"
+step "Building with the auto-signed config:"
 (cd "$REPO" && ./hvigorw assembleHap --mode module -p product=default -p buildMode=debug) || {
-  warn "Build failed — fix it first, then re-run this wizard."; exit 1; }
-note "✓ HAP at $REPO/$HAP"
-step "Installing via hdc:"
-HDC="$(hdc_bin)"
-"$HDC" install -r "$REPO/$HAP" || {
-  warn "Install failed. Common causes:"
-  warn "  • Emulator rejects the unsigned HAP → sign it (next stage), or use a"
-  warn "    debug-signed build from DevEco (Run ▶ once)."
-  warn "  • No target connected → start the emulator, re-run."
+  warn "Build failed — if it says 'no signing config', stage 5 didn't write"
+  warn "signingConfigs into build-profile.json5 yet; re-run stage 5."
   exit 1; }
-step "Launching $BUNDLE…"
+HAP="$(find "$REPO/entry/build/default/outputs" -name "*.hap" | head -1)"
+note "✓ HAP: $HAP"
+if ! "$HDC" install -r "$HAP" 2>/dev/null; then
+  warn "Install failed — likely a signature error (真机要求已签名 HAP)."
+  warn "Re-check stage 5 (auto-signing) and that the bundle name matches AGC,"
+  warn "  then re-run this wizard — it remembers nothing, stages are idempotent."
+  exit 1
+fi
+step "Launching ${BUNDLE}…"
 "$HDC" shell aa start -a "$ABILITY" -b "$BUNDLE" || true
 sleep 5
-note "Target list & foreground check:"
-"$HDC" list targets 2>/dev/null
-"$HDC" shell "pidof $BUNDLE || echo 'process not found'" 2>/dev/null || true
-say "Expected: the phone shows a blank white page (工单 01 的空主页面), and the"
-say "app process for $BUNDLE is running."
+note "Process check (should print a PID):"
+"$HDC" shell "pidof $BUNDLE" 2>/dev/null || true
+say "Expected on the phone: the app opens a blank white page — 工单 01 的"
+say "空主页面. DevEco's green ▶ Run button achieves the same thing."
 pause
 
-# ── Stage 7: signing (only for real devices / signed installs) ────────────
-stage "Signing config (if needed)"
-say "Only needed when installing on a real phone or when the emulator rejects"
-say "the unsigned HAP. DevEco can auto-sign with your Huawei account."
-step "File > Project Structure > Signing Configs"
-step "Tick 'Automatically generate signature' → sign in to Huawei → Apply."
-step "Then re-run stage 6 (the wizard re-installs the now-signed HAP)."
-confirm "Did you configure signing (or is it not needed)?" || warn "Skipped."
+# ── Stage 7: done ─────────────────────────────────────────────────────────
+stage "Wrap-up"
+note "工单 01 真机验收完成:模拟器选项不再需要(Intel Mac 或 Apple Silicon 均可)。"
+note "日常迭代:改代码后 ./hvigorw test(单测)+ 本向导第 6 阶段重装,或直接用"
+note "DevEco 的 ▶ Run 到真机。"
+pause
 
 finish
-note "After this, ticket 01 acceptance is complete: emulator shows the empty"
-note "main page; ./hvigorw test runs the Hypium empty assertion (already green)."
+note "If the emulator path is still wanted on an Apple Silicon Mac, use"
+note "scripts/setup-emulator.sh instead."

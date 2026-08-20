@@ -8,7 +8,7 @@
 
 - [x] Hypium 单测能运行,有一例空断言通过
 - [x] 规则引擎模块目录已建好,可被测试引用
-- [ ] 模拟器可启动应用,显示空主页面 (硬件门槛:本机为 Intel Mac,6.x 模拟器镜像仅 arm64;需在 Apple Silicon Mac / Windows 上运行 `scripts/setup-emulator.sh`)
+- [ ] 设备可启动应用,显示空主页面 (方案已改为**真机**优先:可用 `scripts/setup-real-device.sh` 完成 USB 调试 + DevEco 自动签名 + hdc 安装/启动/校验;模拟器路径 `scripts/setup-emulator.sh` 仅 Apple Silicon 可用)
 
 ## Comments
 
@@ -19,3 +19,10 @@
 - 已固化的可复用产物:仓库根 `hvigorw` 包装脚本(自动带上 DevEco 随附 SDK/JDK 环境)、`scripts/setup-emulator.sh` 向导(见下)、`docs/agents/toolchain.md` 操作笔记。
 - 模拟器验收因硬件受限未在本机完成:下载的 6.1.1 镜像是 `system-image-phone_all-arm64.zip`,Intel Mac(i5-7360U)无法引导。向导中已含硬件检测与人工步骤(Device Manager 下载镜像、建 AVD、启机、hdc 安装/启动/校验),在 Apple Silicon 机器上运行即可完成剩余勾选项。
 - 注意:当前 HAP 未签名(unsigned);若模拟器拒绝安装,需先走向导第 7 阶段(DevEco 自动签名)或直接用 DevEco Run 一次生成调试签名包。
+
+**2026-08-20 — 方案调整(agent, 用户提供真机):**
+
+- 验收路径改为**真机优先**:新增 `scripts/setup-real-device.sh` 向导,按官方指南(ide-run-device)覆盖:手机开发者模式 → USB 调试 → MTP 连接授权 → AGC 应用(bundleName 一致)→ DevEco 自动签名(File > Project Structure > Signing Configs > Automatically generate signature,需登录 APP 管理员级华为账号)→ 自动 build/`hdc install`/启动/pidof 校验。任一宿主机(含本 Intel Mac)均可跑。
+- `scripts/setup-emulator.sh` 在 Intel 分支直接引流到真机向导,不再尝试模拟器;模拟器仍作为 Apple Silicon 备选。
+- `docs/agents/toolchain.md` 已更新:真机为默认验收路径,记录 hdc 路径与常用命令、自动签名写入 build-profile.json5 后 `assembleHap` 产出已签名 HAP(未签名真机报 9568320)。
+- 待用户运行真机向导完成最后的勾选与真实验收。
