@@ -257,7 +257,7 @@ step "开发者联盟 → 我的项目 → 新建/进入一个项目 → 项目�
 step "App type = HarmonyOS 应用; bundle name = ${BUNDLE} (exact match);"
 step "  分类/名称任意."
 step "CN account → agc/index.html; else use /en/ URL:"
-open_url "https://developer.huawei.com/consumer/cn/service/jsp/agc/index.html"
+open_url "https://developer.huawei.com/consumer/cn/service/josp/agc/index.html#/"
 step "No invite-list access? 在项目下添加应用即可调试, 无需受邀名单."
 step "After creating, go back to DevEco signing panel and click Try Again."
 note "Food for thought: system clock off Beijing time? Auto-signing rejects it."
