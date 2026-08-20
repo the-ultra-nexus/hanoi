@@ -25,4 +25,7 @@
 - 验收路径改为**真机优先**:新增 `scripts/setup-real-device.sh` 向导,按官方指南(ide-run-device)覆盖:手机开发者模式 → USB 调试 → MTP 连接授权 → AGC 应用(bundleName 一致)→ DevEco 自动签名(File > Project Structure > Signing Configs > Automatically generate signature,需登录 APP 管理员级华为账号)→ 自动 build/`hdc install`/启动/pidof 校验。任一宿主机(含本 Intel Mac)均可跑。
 - `scripts/setup-emulator.sh` 在 Intel 分支直接引流到真机向导,不再尝试模拟器;模拟器仍作为 Apple Silicon 备选。
 - `docs/agents/toolchain.md` 已更新:真机为默认验收路径,记录 hdc 路径与常用命令、自动签名写入 build-profile.json5 后 `assembleHap` 产出已签名 HAP(未签名真机报 9568320)。
-- 待用户运行真机向导完成最后的勾选与真实验收。
+- 待用户运行真机向导完成最后的勾选与真实验收。**2026-08-20 — bundleName 对齐既有 AGC 应用(agent):**
+  - 用户 AGC 上已存在「汉诺塔游戏」应用,bundleName = `com.example1.hanoi`(项目 ai-gallery)。
+  - 工程 bundleName 由 `com.example.hanoi` 改为 `com.example1.hanoi`(AppScope/app.json5 + 两个向导 BUNDLE 变量 + toolchain.md)。
+  - 早前一次自动签名曾按旧包名签发过 profile(p7b 绑定 `com.example.hanoi`,今日到期 2027-08-20 且含设备 UDID),但 AGC 无此应用 → 视为残留;需在 DevEco 用新 bundle 重跑自动签名(File > Project Structure > Signing Configs > Sign in > Fix/Try Again)。

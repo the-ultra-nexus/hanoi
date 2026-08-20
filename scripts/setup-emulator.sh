@@ -201,7 +201,7 @@ TOTAL_STAGES=7
 REPO="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 DEVECO_HOME="/Applications/DevEco-Studio.app"
 HAP="entry/build/default/outputs/default/entry-default-unsigned.hap"
-BUNDLE="com.example.hanoi"
+BUNDLE="com.example1.hanoi"
 ABILITY="EntryAbility"
 
 # hdc_bin — the hdc CLI: from PATH, else the DevEco-bundled SDK toolchains.

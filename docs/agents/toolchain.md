@@ -47,12 +47,12 @@ Essentials the guide hides:
 - Phone: 设置→通用→关于手机→连点版本号 7 次开开发者模式; 开发者选项里开 USB 调试 + 允许 USB 安装.
 - USB 连接后手机端选「文件传输 (MTP)」, 电脑端授权弹框勾选始终允许.
 - 自动签名前提: DevEco 已登录 APP 管理员级华为账号、已连接设备、AGC 上已存在
-  bundleName 一致的应用(`com.example.hanoi`). 自动签名会把 signingConfig 'default'
+  bundleName 一致的应用(`com.example1.hanoi`). 自动签名会把 signingConfig 'default'
   写入 `build-profile.json5` → 之后 `./hvigorw assembleHap` 产出的是**已签名** HAP,
   可被 `hdc install` 装到真机(未签名真机会报 9568320).
 - hdc 在 `$DEVECO_HOME/Contents/sdk/default/openharmony/toolchains/hdc`;
-  `hdc install -r <hap>`、`hdc shell aa start -a EntryAbility -b com.example.hanoi`、
-  `hdc shell pidof com.example.hanoi` 可用于无 IDE 安装运行校验.
+  `hdc install -r <hap>`、`hdc shell aa start -a EntryAbility -b com.example1.hanoi`、
+  `hdc shell pidof com.example1.hanoi` 可用于无 IDE 安装运行校验.
 
 Emulator alternative (Apple Silicon macOS only; Intel macOS cannot boot the
 arm64-only 6.x images): `scripts/setup-emulator.sh`.

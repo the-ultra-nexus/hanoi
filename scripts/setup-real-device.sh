@@ -197,7 +197,7 @@ REPO="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 DEVECO_HOME="/Applications/DevEco-Studio.app"
 SDK="$DEVECO_HOME/Contents/sdk"
 HDC="$SDK/default/openharmony/toolchains/hdc"
-BUNDLE="com.example.hanoi"
+BUNDLE="com.example1.hanoi"
 ABILITY="EntryAbility"
 
 banner "HarmonyOS real-device setup — hanoi"
