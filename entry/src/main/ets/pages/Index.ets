@@ -25,13 +25,9 @@ struct Index {
   @State private feedback: string = '';
   @State private diskCount: number = 3;
 
-  /** 选择盘数并开局(工单 05) */
+  /** 选择盘数并开局(工单 05);复用 startNewGame 保证步数快照同步初始化 */
   private startGame(n: number) {
-    this.diskCount = n;
-    this.game = new TowerOfHanoi(n);
-    this.pegsView = this.game.pegs;
-    this.selectedPeg = -1;
-    this.feedback = '';
+    this.startNewGame(n);
     this.selectingDiskCount = false;
   }
 
