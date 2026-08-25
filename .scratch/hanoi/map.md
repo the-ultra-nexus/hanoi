@@ -13,3 +13,4 @@ Effort notes / decisions. Child tickets live in `issues/`.
 - 01 已 resolved:空壳工程真机启动 + 空页面显示;Hypium 空断言通过;引擎目录可引用。见 `issues/01-project-skeleton.md`。
 - 02 已 resolved:规则引擎落地(`tryMove` / `pegs` / `moveCount` / `minMoves` / `isWon`),9 例 Hypium 全绿,变异验证可变红。测试样板确立于 `entry/src/test/LocalUnit.test.ets`。见 `issues/02-rule-engine.md`。
 - 03 已 resolved:真机目视验收通过;`DiskView` / `PegView` 自定义组件拆分(学习点 ①),临时盘数滑条待 05 替换。见 `issues/03-peg-and-disk-rendering.md`。
+- 04 已 resolved:真机验收通过;两步点击接入引擎,选中高亮/取消/非法反馈/选择转移齐备(学习点 ②:@State 快照重赋)。见 `issues/04-two-tap-moves.md`。
