@@ -4,10 +4,12 @@ import { DiskView } from './DiskView';
 /**
  * 学习点 ①(工单 03):自定义组件拆分——一根柱。
  * 柱杆固定居中,圆盘自底向上堆叠(disks 为柱底→柱顶顺序,渲染时反转)。
+ * selected 为真时高亮(工单 04:源柱选中态)。
  */
 @Component
 export struct PegView {
   @Prop disks: Disk[];
+  @Prop selected: boolean;
 
   build() {
     Stack({ alignContent: Alignment.Bottom }) {
@@ -36,5 +38,11 @@ export struct PegView {
       .margin({ bottom: 8 })
     }
     .width(120)
+    .borderRadius(12)
+    .border({
+      width: this.selected ? 3 : 0,
+      color: '#FF7043'
+    })
+    .animation({ duration: 150 })
   }
 }
