@@ -16,6 +16,9 @@ struct Index {
   @State private game: TowerOfHanoi = new TowerOfHanoi(3);
   // 渲染快照:引擎局面的拷贝,每次状态变化后整体重新赋值
   @State private pegsView: Disk[][] = [[], [], []];
+  // 步数与最少步数的显示快照(工单 06),与 pegsView 同拍刷新
+  @State private moveCountView: number = 0;
+  @State private minMovesView: number = 0;
   // 当前选中的源柱;-1 表示未选中
   @State private selectedPeg: number = -1;
   // 非法移动的可见反馈,短暂显示后清除
@@ -45,6 +48,8 @@ struct Index {
     this.diskCount = n;
     this.game = new TowerOfHanoi(n);
     this.pegsView = this.game.pegs;
+    this.moveCountView = this.game.moveCount;
+    this.minMovesView = this.game.minMoves;
     this.selectedPeg = -1;
     this.feedback = '';
   }
@@ -61,8 +66,9 @@ struct Index {
     }
     let moved = this.game.tryMove(this.selectedPeg, pegIndex);
     if (moved) {
-      // 合法:局面更新,选择转移到新柱,可连续移动
+      // 合法:局面更新,选择转移到新柱,可连续移动;步数随引擎递增并刷新显示
       this.pegsView = this.game.pegs;
+      this.moveCountView = this.game.moveCount;
       this.selectedPeg = pegIndex;
       this.feedback = '';
     } else {
@@ -160,6 +166,16 @@ struct Index {
       }
       .layoutWeight(1)
       .alignItems(VerticalAlign.Bottom)
+
+      // 步数行(工单 06):当前步数 + 当前盘数的最少步数
+      Row({ space: 16 }) {
+        Text(`步数 ${this.moveCountView}`)
+          .fontSize(16)
+          .fontWeight(FontWeight.Medium)
+        Text(`最少步数 ${this.minMovesView}`)
+          .fontSize(16)
+          .fontColor('#8D6E63')
+      }
 
       // 反馈行:固定高度避免布局跳动
       Text(this.feedback)
