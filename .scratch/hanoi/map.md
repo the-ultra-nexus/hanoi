@@ -16,4 +16,5 @@ Effort notes / decisions. Child tickets live in `issues/`.
 - 04 已 resolved:真机验收通过;两步点击接入引擎,选中高亮/取消/非法反馈/选择转移齐备(学习点 ②:@State 快照重赋)。见 `issues/04-two-tap-moves.md`。
 - 05 已 resolved(并行会话):盘数选择界面 + 重开回选择。见 `issues/05-disk-count-selection.md`。
 - 06 已 resolved:步数行随合法移动/开局刷新;曾因 05 的 `startGame` 未初始化计数快照出现回归,已修并真机复验。见 `issues/06-move-count-display.md`。
+- 07 已 resolved:胜利动画(属性动画 + 显式 animateTo,学习点 ③)、结算对比、再来一局闭环;真机验收通过。**v1 全部工单闭环**,spec 刻意学习清单 ①②③ 均已落地。见 `issues/07-victory-flow.md`。
 - 05 已 resolved:盘数选择界面(3–8 圆形按钮)替换临时 Slider;游戏界面顶栏加「重新开始」按钮。`@State selectingDiskCount` 控制两屏切换。见 `issues/05-disk-count-selection.md`。
