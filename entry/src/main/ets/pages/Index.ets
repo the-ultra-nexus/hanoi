@@ -24,6 +24,10 @@ struct Index {
   // 非法移动的可见反馈,短暂显示后清除
   @State private feedback: string = '';
   @State private diskCount: number = 3;
+  // 胜利态与动画(工单 07,学习点 ③)
+  @State private won: boolean = false;
+  @State private cheerScale: number = 1;
+  @State private cheerAnimating: boolean = false;
 
   /** 选择盘数并开局(工单 05);复用 startNewGame 保证步数快照同步初始化 */
   private startGame(n: number) {
@@ -31,9 +35,17 @@ struct Index {
     this.selectingDiskCount = false;
   }
 
-  /** 重开:回到盘数选择(工单 05) */
+  /** 重开:回到盘数选择(工单 05),并复位胜利态(工单 07) */
   private restart() {
+    this.resetVictory();
     this.selectingDiskCount = true;
+  }
+
+  /** 复位胜利态:显式动画循环停止、面板缩回初始值 */
+  private resetVictory() {
+    this.won = false;
+    this.cheerAnimating = false;
+    this.cheerScale = 1;
   }
 
   aboutToAppear(): void {
@@ -48,6 +60,23 @@ struct Index {
     this.minMovesView = this.game.minMoves;
     this.selectedPeg = -1;
     this.feedback = '';
+    this.resetVictory();
+  }
+
+  /** 胜利触发:面板经属性动画弹入,🎉 用显式 animateTo 无限往复缩放(学习点 ③) */
+  private triggerVictory() {
+    this.won = true;
+    if (!this.cheerAnimating) {
+      this.cheerAnimating = true;
+      animateTo({
+        duration: 500,
+        curve: Curve.EaseInOut,
+        iterations: -1,
+        playMode: PlayMode.Alternate
+      }, () => {
+        this.cheerScale = 1.4;
+      });
+    }
   }
 
   /** 两步点击:未选中→选中;点同柱→取消;点他柱→尝试移动(工单 04) */
@@ -67,6 +96,9 @@ struct Index {
       this.moveCountView = this.game.moveCount;
       this.selectedPeg = pegIndex;
       this.feedback = '';
+      if (this.game.isWon) {
+        this.triggerVictory();
+      }
     } else {
       // 非法:局面与选择都不变,给出可见反馈
       this.feedback = '不合法的移动:只能移顶盘,且大盘不能压小盘';
@@ -81,12 +113,58 @@ struct Index {
       if (this.selectingDiskCount) {
         this.SelectionScreen()
       } else {
-        this.GameScreen()
+        // 胜利层常驻挂载(不随 won 插拔),属性动画才能从旧值平滑过渡(工单 07)
+        Stack() {
+          this.GameScreen()
+          this.VictoryOverlay()
+        }
+        .width('100%')
+        .height('100%')
       }
     }
     .width('100%')
     .height('100%')
     .backgroundColor('#F5F1E8')
+  }
+
+  /** 胜利层:半透明遮罩 + 结算面板;won 翻转时经 .animation 属性动画弹入 */
+  @Builder VictoryOverlay() {
+    Column({ space: 16 }) {
+      Text('🎉')
+        .fontSize(64)
+        .scale({ x: this.cheerScale, y: this.cheerScale })
+
+      Text('胜利!')
+        .fontSize(28)
+        .fontWeight(FontWeight.Bold)
+        .fontColor('#5D4037')
+
+      Text(`本局步数 ${this.moveCountView} / 最少步数 ${this.minMovesView}`)
+        .fontSize(18)
+        .fontColor('#666666')
+
+      Text(this.moveCountView === this.minMovesView ? '最优解,完美!' : `距离最优还差 ${this.moveCountView - this.minMovesView} 步`)
+        .fontSize(14)
+        .fontColor('#8D6E63')
+
+      Button('再来一局')
+        .type(ButtonType.Normal)
+        .width(160)
+        .height(44)
+        .fontSize(16)
+        .backgroundColor('#5D4037')
+        .fontColor('#FFFFFF')
+        .borderRadius(22)
+        .onClick(() => this.restart())
+    }
+    .justifyContent(FlexAlign.Center)
+    .width('100%')
+    .height('100%')
+    .backgroundColor('rgba(0,0,0,0.45)')
+    .opacity(this.won ? 1 : 0)
+    .scale({ x: this.won ? 1 : 0.6, y: this.won ? 1 : 0.6 })
+    .animation({ duration: 450, curve: Curve.EaseOut })
+    .hitTestBehavior(this.won ? HitTestMode.Default : HitTestMode.None)
   }
 
   /** 盘数选择界面:3–8 六个按钮(工单 05) */
