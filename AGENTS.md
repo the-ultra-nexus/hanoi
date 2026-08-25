@@ -12,7 +12,22 @@ Five canonical roles map to same-named label strings. See `docs/agents/triage-la
 
 Single-context: `CONTEXT.md` + `docs/adr/` at repo root. See `docs/agents/domain.md`.
 
+## Coding standards
+
+**`CODING-STANDARDS.md`** at repo root is the binding coding standard for this project. Every agent that writes or reviews code must read it before starting work.
+
+Enforcement points:
+
+- **`/implement`** — before writing any `.ets` or `.ts` file, read `CODING-STANDARDS.md` in full. Every file produced must comply.
+- **`/tdd`** — same: read the standards before the first red-green slice. Test code is code.
+- **`/code-review`** — the Standards sub-agent automatically picks up `CODING-STANDARDS.md` as its primary source. No manual flag needed.
+- **`/grill-with-docs`** — when the grilling surfaces design decisions that touch code shape, reference the standards to keep the idea grounded.
+
+If a standard feels wrong for a specific case, **override it explicitly** with a comment (`// deviation: <reason>`) or record the exception as an ADR. Don't silently skip.
+
 ## Tooling: DevEco Code delegation
+
+> **Note:** DevEco Code (`deveco`) handles HarmonyOS build/run/deploy tasks only. It does **not** own coding standards — those are enforced by this repo's flow skills (implement → tdd → code-review), which always run in-repo.
 
 `deveco` CLI (DevEco Code, OpenCode-based) owns HarmonyOS-specific operations this repo's flow agents do not: creating projects, hvigor builds, HDC deploy/run on device or Previewer, ArkTS API lookups and lint fixes.
 
