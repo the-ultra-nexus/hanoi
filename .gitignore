@@ -10,3 +10,10 @@
 /.clang-tidy
 **/.test
 /.appanalyzer
+
+# 签名材料（私钥库/证书）一律不入库；build-profile.json5 中仅保留净化占位
+*.p12
+*.p7b
+*.cer
+*.jks
+*.keystore
